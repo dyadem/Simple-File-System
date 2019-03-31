@@ -49,9 +49,6 @@ typedef struct superblock
 	// count of allocated blocks
 	int allocated_blocks;
 
-	// number of inodes
-	int inode_count;
-
 	// count of max number of files
 	int max_files;
 
@@ -62,7 +59,7 @@ typedef struct superblock
 	int next_free_inode;
 
 	// padding to make the block 512 bytes
-	char padding[BLOCK_SIZE - ((sizeof(int) * 8))];
+	char padding[BLOCK_SIZE - ((sizeof(int) * 7))];
 } superblock;
 
 typedef struct free_block
@@ -98,15 +95,20 @@ typedef struct direntry{
 void  SetBit( int A[],  int k ); //DONE
 void  ClearBit( int A[],  int k ); //DONE
 int TestBit( int A[],  int k ); //DONE
+
 inode *get_inode(int inode_number); //DONE
 int write_inode(inode *node); //DONE
+
 void* block_read(int offset); //DONE
 int block_write(void* block, int offset, int data_size); //DONE
+
 superblock* get_superblock(); //DONE
 int write_superblock(superblock* sb); //DONE
+
 int* get_block_list(); //DONE
 int get_next_free_block(); //DONE
 int write_block_list(int* block_list); //DONE
+
 int* get_inode_list(); //DONE
 int get_next_free_inode(); //DONE
 int write_inode_list(int* inode_list); //DONE

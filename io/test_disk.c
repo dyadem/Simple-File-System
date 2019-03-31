@@ -10,9 +10,8 @@ int test_disk(){
 	if (open_fs(VDISK_PATH) !=0){
 		exit(1);
 	}
-
-//test next free block
 	superblock *spb = get_superblock();
+//test next free block
 	assert(spb->next_free_block == get_next_free_block());
 	assert(spb->next_free_inode == get_next_free_inode());
 //test write inode
@@ -40,8 +39,9 @@ int test_disk(){
 	// inode *node = get_inode(3);
 	// node->inode_num = 2;
 	// write_inode(node);
-
+	free(spb);
 	close_fs();
+	printf("Tests passed!\n");
 	return 0;
 }
 

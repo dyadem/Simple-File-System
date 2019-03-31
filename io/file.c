@@ -112,7 +112,7 @@ int initFS(char *vdisk_path){
 		iptr->filesize = 0;
 		//initialize default as 0=file
 		iptr->directory_flag = 0;
-		// set pointers to 0, otherwise they initialize with values (?)
+		// set pointers to 0, otherwise they initialize with values from stack(?)
 		for (int l = 0; l < 10; l++){
 			iptr->block_pointers[l] = 0;
 		}
@@ -127,6 +127,8 @@ int initFS(char *vdisk_path){
 
 	// printf("%zu \n", sizeof (struct inode));
 	// printf("%lu \n", sizeof(inode));
+	// printf("NFB: %d\n",sb->next_free_block);
+	// printf("NFB: %d\n",get_next_free_block());
 
 	//initialize root inode for dir 0;
 	// inode *root_inode = get_inode(0);
@@ -149,9 +151,33 @@ int init_root(){
 	}
 
 	superblock *spb = get_superblock();
+	direntry *dirent;
+
+	// create block 9 with root directory entry
+//TODO generic file_create() with all the updating built in
+	// printf("sizeof name: %lu\n", sizeof(dirent->name));
+	dirent = (direntry *)malloc(sizeof(direntry));
+	if (dirent == NULL) {
+		fprintf(stderr, "Malloc for root direntry failed\n" );
+		return 1;
+	}
+	// char name[11] = "root";
+	strncpy(dirent->name, "root",sizeof(dirent->name)-1);
+	dirent->name[sizeof(dirent->name)-1] = 0; // ensure termination
+	// int num = get_next_free_inode();
+	// printf("Inode num: %d\n", num);
+	dirent->inode_num = get_next_free_inode(); //should be 0
+	int next_block = get_next_free_block();//should be 9 for root block
+	int offset = BLOCK_SIZE*next_block; // 512*9 gets to start of block 9
+	block_write(dirent,offset,sizeof(direntry));
+
+	// unpdate inode for root dir
+	inode *iptr = get_inode(dirent->inode_num);
+	iptr->filesize = sizeof(direntry);
+	iptr->directory_flag = 1; //for directory
+	write_inode(iptr);
 
 	//update block_list
-
 	//get next block number (should be block 9), update it to 0=used
 	int *b_list = get_block_list();
 	// printf("NFB Before: %d\n",spb->next_free_block);
@@ -167,12 +193,10 @@ int init_root(){
 		exit(1);
 	}
 	spb->next_free_block++;
-	// printf("NDB After: %d\n",spb->next_free_block);
+	// printf("NFB After: %d\n",spb->next_free_block);
 
 	//update inode_list
-
 	//get next inode number (should be inode 0), update it to 0=used
-
 	int *i_list = get_inode_list();
 	// printf("NFI Before: %d\n",get_next_free_inode());
 	if (TestBit(i_list, spb->next_free_inode) == 1)
@@ -189,9 +213,12 @@ int init_root(){
 	spb->next_free_inode++;
 	// printf("NFI After: %d\n",get_next_free_inode());
 
-//TODO create block 9 with root directory entry
+	// update superblock
+	spb->current_files++;
+	spb->allocated_blocks++;
 
-// TODO update superblock
+	//clean up
+	free(dirent);
 
 	write_superblock(spb);
 

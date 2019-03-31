@@ -60,7 +60,7 @@ inode *get_inode(int inode_number){
 	//get bytes from disk
 	memcpy(ret, &buffer[inode_offset * INODE_SIZE], INODE_SIZE);
 
-	printf("Returned inode number: %d\n", ret->inode_num);
+	// printf("Returned inode number: %d\n", ret->inode_num);
 
 	return ret;
 }
@@ -90,9 +90,6 @@ int write_inode(inode *node){
 		fprintf(stderr, "free block vector write error\n");
 		exit(1);
 	}
-
-
-
 	// Clean up
 	free(node);
 

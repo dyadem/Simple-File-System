@@ -11,10 +11,10 @@ int test_disk(){
 		exit(1);
 	}
 	superblock *spb = get_superblock();
-//test next free block
+	//test next free block
 	assert(spb->next_free_block == get_next_free_block());
+	//test write inode
 	assert(spb->next_free_inode == get_next_free_inode());
-//test write inode
 
 	// printf("Testing inode write to inode 3. Size: %zu\n", sizeof(inode));
 	// inode *iptr = (inode *)malloc(sizeof(inode));
@@ -31,7 +31,7 @@ int test_disk(){
 
 //test get inode
 
-	// for (int i = 0; i < 112; i++){
+	// for (int i = 0; i < 96; i++){
 	// 	inode *inod = get_inode(i);
 	// 	printf("%d\n",inod->inode_num);
 	// }
@@ -51,6 +51,8 @@ int main(){
 	initFS(vdisk_path);
 	test_disk();
 	init_root();
+	test_disk();
+	create_file("file.txt");
 	test_disk();
 
 	return 0;

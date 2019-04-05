@@ -96,6 +96,20 @@ int write_inode(inode *node){
 	return 0;
 }
 
+int path_to_inode(char* path)
+{
+	if (!path) {
+		return -1;
+	}
+	if (strlen(path) == 0 || strcmp(path, "/") == 0) {
+		return 0;
+	}
+
+	// TODO: other directory paths
+	return 0;
+}
+
+
 void* block_read(int offset)
 {
 	void* buffer = malloc(BLOCK_SIZE);
@@ -117,6 +131,17 @@ int block_write(void* block, int offset, int data_size)
 
 	// Write block to disk
 	fwrite(block, 1, data_size, vdisk);
+
+	// int padding_size = BLOCK_SIZE - ((offset%512) + data_size);
+
+	// printf("Padding size: %d\n",padding_size );
+	// char *padding = (char*) malloc(padding_size);
+	// printf("sizeof padding: %lu\n", sizeof(padding) );
+	// memset(padding, '0', padding_size);
+	// printf("sizeof padding: %lu\n", sizeof(padding) );
+	// fseek(vdisk, offset+data_size, SEEK_SET);
+	// printf("sizeof padding: %lu\n", sizeof(padding) );
+	// fwrite(padding, 1, padding_size, vdisk);
 
 	return 0;
 }
@@ -207,6 +232,54 @@ int write_block_list(int* block_list)
 	return 0;
 }
 
+int set_block_list(int k)
+{
+	int *list;
+
+	// Get list
+	list = get_block_list();
+
+	// Check bit: 1 = available slot
+	if (TestBit(list, k) == 1) {
+		ClearBit(list, k);
+	} else {
+		printf("Block already set in list!\n");
+		return 1;
+	}
+
+	// Write list back to disk
+	if (write_block_list(list) != 0) {
+		fprintf(stderr, "Problems writing block list to disk!\n" );
+		exit(1);
+	}
+
+	return 0;
+}
+
+int clear_block_list(int k)
+{
+	int *list;
+
+	// Get list
+	list = get_block_list();
+
+	// Check bit: 0 = unavailable slot
+	if (TestBit(list, k) == 0) {
+		SetBit(list, k);
+	} else {
+		fprintf(stderr, "Block list bit already cleared!\n" );
+		exit(1);
+	}
+
+	// Write list back to disk
+	if (write_block_list(list) != 0) {
+		fprintf(stderr, "Problems writing inode list to disk!\n" );
+		exit(1);
+	}
+
+	return 0;
+}
+
 int* get_inode_list()
 {
 	// Free inode vector is always the third block
@@ -233,7 +306,7 @@ int get_next_free_inode(){
 			exit(0);
 		}
 	}
-	fprintf(stderr, "No free blocks available! Disk Full?\n");
+	fprintf(stderr, "No free inodes available! Disk Full?\n");
 	exit(1);
 }
 
@@ -253,6 +326,56 @@ int write_inode_list(int* inode_list)
 
 	return 0;
 }
+
+int set_inode_list(int k)
+{
+	int *list;
+
+	// Get list
+	list = get_inode_list();
+
+	// Check bit: 1 = available slot
+	if (TestBit(list, k) == 1) {
+		ClearBit(list, k);
+	} else {
+		fprintf(stderr, "Inode already set in list!\n" );
+		exit(1);
+	}
+
+	// Write list back to disk
+	if (write_inode_list(list) != 0) {
+		fprintf(stderr, "Problems writing inode list to disk!\n" );
+		exit(1);
+	}
+
+	return 0;
+}
+
+int clear_inode_list(int k)
+{
+	int *list;
+
+	// Get list
+	list = get_inode_list();
+
+	// Check bit: 0 = unavailable slot
+	if (TestBit(list, k) == 0) {
+		SetBit(list, k);
+	} else {
+		fprintf(stderr, "Inode list bit already cleared!\n" );
+		exit(1);
+	}
+
+	// Write list back to disk
+	if (write_inode_list(list) != 0) {
+		fprintf(stderr, "Problems writing inode list to disk!\n" );
+		exit(1);
+	}
+
+	return 0;
+}
+
+
 
 
 

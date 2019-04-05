@@ -62,21 +62,21 @@ typedef struct superblock
 	char padding[BLOCK_SIZE - ((sizeof(int) * 7))];
 } superblock;
 
-typedef struct free_block
-{
-	// pointer to the next free block
-	int next_free;
-	int prev_free;
-	// Free status
-	char data[BLOCK_SIZE - (sizeof(int) * 2)];
-} free_block;
+// typedef struct free_block
+// {
+// 	// pointer to the next free block
+// 	int next_free;
+// 	int prev_free;
+// 	// Free status
+// 	char data[BLOCK_SIZE - (sizeof(int) * 2)];
+// } free_block;
 
 typedef struct inode
 {
 	//inode number starting at 0
 	int inode_num;
 	//filesize
-	int filesize;
+	int filesize;//keeps track of offset of direntry in dir block by incrementing by 16 max: 512/16 = 32
 	// flag: 0 for file 1 for dir
 	short directory_flag;
 	//first ten data blocks
@@ -90,6 +90,10 @@ typedef struct direntry{
 	int inode_num;
 } direntry;
 
+typedef struct block {
+	// Size of block, 512 bytes
+	char data[BLOCK_SIZE];
+} block;
 /************* function definitions *****************/
 
 void  SetBit( int A[],  int k ); //DONE
@@ -98,6 +102,7 @@ int TestBit( int A[],  int k ); //DONE
 
 inode *get_inode(int inode_number); //DONE
 int write_inode(inode *node); //DONE
+int path_to_inode(char* path); //DONE
 
 void* block_read(int offset); //DONE
 int block_write(void* block, int offset, int data_size); //DONE
@@ -108,10 +113,13 @@ int write_superblock(superblock* sb); //DONE
 int* get_block_list(); //DONE
 int get_next_free_block(); //DONE
 int write_block_list(int* block_list); //DONE
+int set_block_list(int k);//DONE
+int clear_block_list(int k);//DONE
 
 int* get_inode_list(); //DONE
 int get_next_free_inode(); //DONE
 int write_inode_list(int* inode_list); //DONE
-
+int set_inode_list(int k);//DONE
+int clear_inode_list(int k);//DONE
 
 #endif

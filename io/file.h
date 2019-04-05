@@ -19,11 +19,11 @@
 #define LSEEK_ABSOLUTE 1
 #define LSEEK_END 2
 
-
-int initFS(char *vdisk_path); //DONE
-int init_root();
 int open_fs(char *fs_path); //DONE
 void close_fs(void); //DONE
+int initFS(char *vdisk_path); //DONE
+int init_root();
+int create_file();//DONE
 
 
 // Opens a file and creates an entry in an "open files" table.

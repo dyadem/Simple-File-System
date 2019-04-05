@@ -143,7 +143,7 @@ int initFS(char *vdisk_path){
 	//clean up init
 	free(sb);
 	fclose(vdisk);
-	printf("Initializtion finished\n");
+	printf("Disk initializtion complete.\n");
 	return 0;
 }
 
@@ -257,16 +257,11 @@ int init_root(){
 }
 
 int create_file(char* filename){
-	// int i, j, path_length, slash_index,inode_num,
+	printf("creating file: %s\n",filename);
 	int block_number;
-	int block_offset, dir_offset;
-	// char *new_path;
-	// char filename[12];
-	inode *dir_node;
+	int block_offset;
 	inode *new_inode;
 	block *new_block;
-	// block *dir_block;
-	direntry *dir_entry;
 	file_info *fileinfo;
 
 	//open the disk
@@ -291,14 +286,13 @@ int create_file(char* filename){
 
 	// printf("slash index: %d\n", slash_index);
 	// printf("%s\n", filename );
-
-	Get inode for path
-	inode_num = path_to_inode(new_path);
 	*/
+	// Get inode for file
+	int inode_num = sb->next_free_inode;
 
 	// Get next available inode for the file
 	// printf("next free inode: %d\n",sb->next_free_inode);
-	new_inode = get_inode(sb->next_free_inode);
+	new_inode = get_inode(inode_num);
 	new_inode->directory_flag = 0;
 	new_inode->filesize = 0;//empty file  TODO: add file descriptor
 
@@ -310,9 +304,13 @@ int create_file(char* filename){
 
 	// write file descriptor to the new block
 	fileinfo = (file_info *)malloc(sizeof(file_info));
-
-	strcpy(fileinfo->filepath, filename);
-	fileinfo->inumber = sb->next_free_inode;
+	//generate path: only handles root dir for now
+	char path[] = "/"; //TODO get path from current_dir
+	char * fullpath = (char *) malloc(1 + strlen(path)+ strlen(filename) );
+	strcpy(fullpath, path);
+	strcat(fullpath,filename);
+	strcpy(fileinfo->filepath, fullpath);
+	fileinfo->inumber = inode_num;
 	fileinfo->cursor = 0;
 
 	// write fileinfo to new block
@@ -339,6 +337,9 @@ int create_file(char* filename){
 		}
 	}
 
+	// add filesize to inode
+	new_inode->filesize = sizeof(direntry);
+
 	// Write new inode to disk
 	if (write_inode(new_inode) != 0) {
 		fprintf(stderr, "Problems writing new inode to disk!\n" );
@@ -354,37 +355,9 @@ int create_file(char* filename){
 	set_inode_list(sb->next_free_inode);
 
 	//add direntry to directory block
-	int current_dir = 0; // only handle root dir for now. TODO: add PWD();
-	dir_node = get_inode(current_dir);
-
-	int dir_block_num = dir_node->block_pointers[0];
-	// printf("directory filesize: %d\n", dir_node->filesize);
-	dir_offset = (512*(dir_block_num)) + dir_node->filesize;
-	// printf("dir offset: %d\n",dir_offset);
-	//dir_block = block_read(dir_offset);
-
-	dir_entry = (direntry *)malloc(sizeof(direntry));
-	memset(dir_entry->name, 0, sizeof(dir_entry->name));
-	dir_entry->inode_num = sb->next_free_inode;
-	strcpy(dir_entry->name, filename);
-
-	// memcpy(&dir_block->data[dirents * 16], dir_entry, sizeof(direntry));
-
-	// Write directory entry to disk
-	if (block_write(dir_entry, dir_offset, sizeof(direntry)) != 0) {
-		fprintf(stderr, "Problem writing directory block to disk in write_file!\n" );
-		exit(1);
-	}
-
-	//update dir inode number of direntries
-	dir_node->filesize +=16;
-	// printf("directory filesize: %d\n", dir_node->filesize);
-
-	// Write dir inode back to disk
-	if (write_inode(dir_node) != 0) {
-		fprintf(stderr, "Problems writing path inode back to disk!\n");
-		exit(1);
-	}
+	int current_dir = 0; // only handle root dir for now. TODO: add CWD();
+	int dir_inode_num = 0;
+	add_file_direntry(current_dir,filename,dir_inode_num);
 
 	// Update Superblock
 	sb->next_free_block++;
@@ -393,8 +366,8 @@ int create_file(char* filename){
 
 	// Clean up
 	free(new_block);
-	// free(dir_block);
-	free(dir_entry);
+	free(fileinfo);
+	free(fullpath);
 
 	// Write Superblock back to disk
 	if(write_superblock(sb) != 0) {
@@ -405,7 +378,188 @@ int create_file(char* filename){
 
 	//close file
 	close_fs();
-
+	printf("file created: %s\n",filename );
 	return 0;
 
+}
+
+int write_new_file(char *file, char *path){
+	FILE *f;
+	char *contents;
+	long file_size;
+	int block_offset, block_number, inode_num;
+	inode *new_inode;
+	block *new_block;
+	superblock *sb;
+	file_info *fileinfo;
+	char *filename = file; //must be in CWD on host machine for now
+
+	//open the disk
+	if (open_fs(VDISK_PATH) !=0){
+		exit(1);
+	}
+
+	sb = get_superblock();
+
+	printf("Writing new file: %s\n",file );
+	//open target file
+	f = fopen(file, "rb");
+	fseek(f, 0, SEEK_END);
+
+	//check size
+	file_size = ftell(f);
+	rewind(f);
+	// printf("filesize: %ld\n",file_size );
+
+	//read file into memory
+	contents = malloc(file_size + 1);
+	if (contents == NULL) {
+		fprintf(stderr,"Malloc for contents failed!\n");
+		exit(1);
+	}
+	fread(contents, 1, file_size, f);
+	fclose(f);
+
+	//null terminations
+	contents[file_size] = 0;
+	// printf("Contents: %s\n", contents);
+	//Get file inode
+	inode_num = get_next_free_inode();
+	new_inode = get_inode(inode_num);
+	new_inode->directory_flag = 0; //set 0 for file
+	new_inode->filesize = file_size;
+
+	//get new block
+	block_number = get_next_free_block();
+	new_block = (block *)malloc(sizeof(block));
+	if (new_block == NULL) {
+		fprintf(stderr,"Malloc for new_block failed!\n");
+		exit(1);
+	}
+	memset(new_block->data, 0, sizeof(new_block->data));
+	// printf("next free block %d\n",block_number);
+
+	// write fileinfo descriptor to the new block
+	fileinfo = (file_info *)malloc(sizeof(file_info));
+	//path = "/filename.ex"; TODO handle multiple directory tree
+	// char * fullpath = (char *) malloc(1 + strlen(path)+ strlen(filename) );
+	// if (fullpath == NULL) {
+	// 	fprintf(stderr,"Malloc for fullpath failed!\n");
+	// 	exit(1);
+	// }
+	// strcpy(fullpath, path);
+	// strcat(fullpath,filename);
+	strcpy(fileinfo->filepath, path);
+	fileinfo->inumber = inode_num;
+	fileinfo->cursor = 0;
+
+	// copy fileinfo to new block in memory
+	memcpy(new_block->data,fileinfo,sizeof(file_info));
+
+	// copy contents to new block in memory with offset (ie. after fileinfo)
+	if (file_size < 512-sizeof(file_info)){
+		//OK small enough for one block
+			memcpy(&new_block->data[sizeof(file_info)],contents, file_size);
+	}
+	else{
+		fprintf(stderr, "FS can't handle multi block files yet!\n");
+		//TODO handle larger files
+		exit(1);
+	}
+
+	block_offset = (block_number) * BLOCK_SIZE;
+	// Write new block with fileinfo to disk
+	if (block_write(new_block, block_offset, BLOCK_SIZE) != 0) {
+		fprintf(stderr, "Problems writing new block back to disk\n" );
+		exit(1);
+	}
+
+	//update inode block pointer
+	new_inode->block_pointers[0] = block_number;
+
+	// Write new inode to disk
+	write_inode(new_inode);
+
+	// Update free block vector
+	set_block_list(block_number);
+
+	// Update inode list vector
+	set_inode_list(sb->next_free_inode);
+
+	//add direntry
+	int dir_inode_num = 0;//only handling root dir for now TODO: add CWD
+	int current_dir = 0;//only handling root dir TODO: add CWD
+	add_file_direntry(current_dir,filename,dir_inode_num);
+
+	//update superblock
+	sb->next_free_block++;
+	sb->next_free_inode++;
+	sb->allocated_blocks++;
+
+	// Write Superblock back to disk
+	if(write_superblock(sb) != 0) {
+		printf("Problems writing superblock to disk!\n");
+		free(sb);
+		return 1;
+	}
+
+	// Clean up
+	free(contents);
+	free(new_block);
+	free(fileinfo);
+	// free(fullpath);
+
+	//close file
+	close_fs();
+	printf("file created: %s\n",filename );
+	return 0;
+}
+
+int add_file_direntry(int current_dir,char* filename,int inode_num){
+	inode *dir_node;
+	//allocate direntry in memory
+	direntry *dir_entry = (direntry *)malloc(sizeof(direntry));
+	if (dir_entry == NULL) {
+		fprintf(stderr,"Malloc for dir_entry failed!\n");
+		exit(1);
+	}
+	//check name is not over max
+	size_t len = strlen(filename);
+	int max_len = sizeof(dir_entry->name);
+	if (len>=max_len){
+		fprintf(stderr, "Error. Filename too long! Max length is %d characters\n", max_len);
+		exit(1);
+	}
+	//get inode for the directory block
+	dir_node = get_inode(current_dir);
+	//get block number of the directory block
+	int dir_block_num = dir_node->block_pointers[0];
+	// printf("directory filesize: %d\n", dir_node->filesize);
+	int dir_offset = (512*(dir_block_num)) + dir_node->filesize;
+	// printf("dir offset: %d\n",dir_offset);
+	//dir_block = block_read(dir_offset);
+
+	memset(dir_entry->name, 0, sizeof(dir_entry->name));
+	strcpy(dir_entry->name, filename);
+	dir_entry->inode_num = inode_num;
+
+	// memcpy(&dir_block->data[dirents * 16], dir_entry, sizeof(direntry));
+
+	// Write directory entry to disk
+	if (block_write(dir_entry, dir_offset, sizeof(direntry)) != 0) {
+		fprintf(stderr, "Problem writing directory block to disk in write_file!\n" );
+		exit(1);
+	}
+
+	//update dir inode number of direntries
+	dir_node->filesize += sizeof(direntry);
+	// printf("directory filesize: %d\n", dir_node->filesize);
+
+	// Write dir inode back to disk
+	if (write_inode(dir_node) != 0) {
+		fprintf(stderr, "Problems writing path inode back to disk!\n");
+		exit(1);
+	}
+	free(dir_entry);
+	return(0);
 }

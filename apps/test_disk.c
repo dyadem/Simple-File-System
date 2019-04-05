@@ -10,12 +10,13 @@ int test_disk(){
 	if (open_fs(VDISK_PATH) !=0){
 		exit(1);
 	}
-	superblock *spb = get_superblock();
+	superblock *sb = get_superblock();
 	//test next free block
-	assert(spb->next_free_block == get_next_free_block());
+	assert(sb->next_free_block == get_next_free_block());
 	//test write inode
-	assert(spb->next_free_inode == get_next_free_inode());
-
+	assert(sb->next_free_inode == get_next_free_inode());
+	printf("Tests: sb NFInode: %d\n", sb->next_free_inode);
+	printf("Tests: getNFInode: %d\n", get_next_free_inode());
 	// printf("Testing inode write to inode 3. Size: %zu\n", sizeof(inode));
 	// inode *iptr = (inode *)malloc(sizeof(inode));
 	// if (iptr == NULL){
@@ -39,7 +40,7 @@ int test_disk(){
 	// inode *node = get_inode(3);
 	// node->inode_num = 2;
 	// write_inode(node);
-	free(spb);
+	free(sb);
 	close_fs();
 	printf("Tests passed!\n");
 	return 0;
@@ -47,10 +48,11 @@ int test_disk(){
 
 int main(){
 	initFS(VDISK_PATH);
-	test_disk();
 	init_root();
-	test_disk();
 	create_file("file.txt");
+	create_file("testfile.txt");
+	test_disk();
+	write_new_file("robot.txt","/robot.txt");
 	test_disk();
 
 	return 0;

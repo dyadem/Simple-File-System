@@ -22,8 +22,10 @@
 int open_fs(char *fs_path); //DONE
 void close_fs(void); //DONE
 int initFS(char *vdisk_path); //DONE
-int init_root();
+int init_root();//DONE
 int create_file();//DONE
+int write_new_file(char *file, char *path);
+int add_file_direntry(int current_dir,char* filename,int inode_num);
 
 
 // Opens a file and creates an entry in an "open files" table.

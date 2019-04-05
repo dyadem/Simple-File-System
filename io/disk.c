@@ -87,7 +87,7 @@ int write_inode(inode *node){
 	// Write inode into disk
 	// printf("Inode size: %zu\n", sizeof(inode));
 	if (fwrite(node, 1, sizeof(inode), vdisk) != sizeof(inode)){
-		fprintf(stderr, "free block vector write error\n");
+		fprintf(stderr, "free inode vector write error %d\n",inode_number);
 		exit(1);
 	}
 	// Clean up

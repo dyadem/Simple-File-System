@@ -36,6 +36,10 @@ int initFS(char *vdisk_path){
 	superblock *sb;
 
 	vdisk = fopen(vdisk_path, "wb+");
+	printf("vdisk path: %s\n",vdisk_path);
+	char cwd[1024];
+	getcwd(cwd, sizeof(cwd));
+	printf("cwd: %s\n",cwd);
 	if (vdisk == NULL){
 		fprintf(stderr, "Error opening disk on init\n");
 		return 1;

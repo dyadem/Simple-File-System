@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "file.h"
-#include "disk.h"
+#include "../io/file.h"
+#include "../io/disk.h"
 #include <assert.h>
 
 int test_disk(){
@@ -46,9 +46,7 @@ int test_disk(){
 }
 
 int main(){
-	// printf("testing Makefile\n");..
-	char *vdisk_path = VDISK_PATH;
-	initFS(vdisk_path);
+	initFS(VDISK_PATH);
 	test_disk();
 	init_root();
 	test_disk();

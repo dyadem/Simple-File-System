@@ -18,7 +18,7 @@
 #define BLOCK_LIST_ENTRIES 128 //No of ints in the list BLOCKS/8/4
 #define INODE_LIST_ENTRIES 3 //No of ints in the list NUM_INODES/8/4 bytes per int
 //#define MAX_FILES ??
-#define VDISK_PATH "../disk/vdisk"
+#define VDISK_PATH "disk/vdisk"
 
 FILE *vdisk;
 

@@ -1,6 +1,4 @@
 # **Assignment 3: File System**
-**UVic CSC360 Spring 2019**  
-**Jason Sanche V00349530 LabID:137**
 
 I decided to start with a fixed inode structure with the intention that I could improve this to a log structured file system in the future. The code is modularized into disk.c, a library of lower level disk control functions, and file.c which is the api for file manipulation functions.
 

@@ -4,7 +4,8 @@ For this file system implementation, I have started with a fixed inode structure
 
 **Compile with the included makefile and "./run"** This will run 'main' in test_disk.c through initialization of the virtual disk, setting the root directory and testing with file creation, writing files, and reading text files to the command line. This much is implemented and functional.
 
-The disk is initialized with the following blocks:
+The disk is initialized with the following blocks:  
+
 **BLOCK 0.** Superblock  
 **BLOCK 1.** A free-block bit array, list of binary flags 0=used, 1=free.  
 **BLOCK 2.** A free-inode list of binary flags, 0=used 1=free.  

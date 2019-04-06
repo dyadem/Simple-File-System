@@ -5,31 +5,6 @@
 #include <string.h>
 #include <assert.h>
 
-//vdisk management functions
-int open_fs(char *fs_path)
-{
-	// Open vdisk
-	vdisk = fopen(fs_path, "r+");
-
-	if (vdisk == NULL) {
-		fprintf(stderr, "Error opening file system!\n");
-		exit(1);
-	}
-	return 0;
-
-}
-
-void close_fs(void)
-{
-	// Close vdisk
-	int retval = fclose(vdisk);
-
-	if (retval == 0) {
-		// printf("File system closed successfully...\n");
-	} else {
-		fprintf(stderr, "File system could not be closed!\n");
-	}
-}
 
 //disk initialization
 int initFS(char *vdisk_path){
@@ -356,8 +331,7 @@ int create_file(char* filename){
 
 	//add direntry to directory block
 	int current_dir = 0; // only handle root dir for now. TODO: add CWD();
-	int dir_inode_num = 0;
-	add_file_direntry(current_dir,filename,dir_inode_num);
+	add_file_direntry(current_dir,filename,inode_num);
 
 	// Update Superblock
 	sb->next_free_block++;
@@ -487,9 +461,8 @@ int write_new_file(char *file, char *path){
 	set_inode_list(sb->next_free_inode);
 
 	//add direntry
-	int dir_inode_num = 0;//only handling root dir for now TODO: add CWD
 	int current_dir = 0;//only handling root dir TODO: add CWD
-	add_file_direntry(current_dir,filename,dir_inode_num);
+	add_file_direntry(current_dir,filename,inode_num);
 
 	//update superblock
 	sb->next_free_block++;
@@ -511,55 +484,48 @@ int write_new_file(char *file, char *path){
 
 	//close file
 	close_fs();
-	printf("file created: %s\n",filename );
+	printf("exiting file write: %s\n",filename );
 	return 0;
 }
 
-int add_file_direntry(int current_dir,char* filename,int inode_num){
-	inode *dir_node;
-	//allocate direntry in memory
-	direntry *dir_entry = (direntry *)malloc(sizeof(direntry));
-	if (dir_entry == NULL) {
-		fprintf(stderr,"Malloc for dir_entry failed!\n");
-		exit(1);
-	}
-	//check name is not over max
-	size_t len = strlen(filename);
-	int max_len = sizeof(dir_entry->name);
-	if (len>=max_len){
-		fprintf(stderr, "Error. Filename too long! Max length is %d characters\n", max_len);
-		exit(1);
-	}
-	//get inode for the directory block
-	dir_node = get_inode(current_dir);
-	//get block number of the directory block
-	int dir_block_num = dir_node->block_pointers[0];
-	// printf("directory filesize: %d\n", dir_node->filesize);
-	int dir_offset = (512*(dir_block_num)) + dir_node->filesize;
-	// printf("dir offset: %d\n",dir_offset);
-	//dir_block = block_read(dir_offset);
+int read_file(char *filename){
 
-	memset(dir_entry->name, 0, sizeof(dir_entry->name));
-	strcpy(dir_entry->name, filename);
-	dir_entry->inode_num = inode_num;
+	char * contents;
+	int filesize;
+	int inode_num, block_offset;
+	inode *file_inode;
+	block *file_block;
 
-	// memcpy(&dir_block->data[dirents * 16], dir_entry, sizeof(direntry));
-
-	// Write directory entry to disk
-	if (block_write(dir_entry, dir_offset, sizeof(direntry)) != 0) {
-		fprintf(stderr, "Problem writing directory block to disk in write_file!\n" );
+	printf("reading file: %s\n",filename );
+	//open the disk
+	if (open_fs(VDISK_PATH) !=0){
 		exit(1);
 	}
 
-	//update dir inode number of direntries
-	dir_node->filesize += sizeof(direntry);
-	// printf("directory filesize: %d\n", dir_node->filesize);
+	//get inode of file from direntry
+	inode_num = get_inode_num_from_direntry(filename);
+	file_inode = get_inode(inode_num);
 
-	// Write dir inode back to disk
-	if (write_inode(dir_node) != 0) {
-		fprintf(stderr, "Problems writing path inode back to disk!\n");
-		exit(1);
-	}
-	free(dir_entry);
-	return(0);
+	//get filesize
+	filesize = file_inode->filesize;
+	contents = malloc(filesize+1);
+
+	//get block
+	block_offset = (file_inode->block_pointers[0] * BLOCK_SIZE) + sizeof(file_info);
+	file_block = (block *)block_read(block_offset);
+
+	//get contents of block
+	memcpy(contents, &file_block->data, filesize);
+
+	//print contents to command line
+	printf("Contents of file: \n%s\n", contents);
+
+	//clean up
+	free(file_block);
+	free(contents);
+	free(file_inode);
+
+	close_fs();
+	printf("exiting file read: %s\n",filename );
+	return 0;
 }

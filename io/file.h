@@ -19,22 +19,12 @@
 #define LSEEK_ABSOLUTE 1
 #define LSEEK_END 2
 
-int open_fs(char *fs_path); //DONE
-void close_fs(void); //DONE
 int initFS(char *vdisk_path); //DONE
 int init_root();//DONE
 int create_file();//DONE
-int write_new_file(char *file, char *path);
-int add_file_direntry(int current_dir,char* filename,int inode_num);
+int write_new_file(char *file, char *path);//DONE
+int read_file(char *filename);//DONE
 
-
-// Opens a file and creates an entry in an "open files" table.
-// Returns an int that is in index into this table.
-int file_open(char *path);
-
-// Creates a new file. Does not open the file.
-// Returns an error or SUCCESS.
-int file_create(char *path);
 
 // Closes a file. Removes the index int the "open files" table and ensures
 // that all data is synchronized with the disk.

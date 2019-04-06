@@ -95,6 +95,8 @@ typedef struct block {
 	char data[BLOCK_SIZE];
 } block;
 /************* function definitions *****************/
+int open_fs(char *fs_path); //DONE
+void close_fs(void); //DONE
 
 void  SetBit( int A[],  int k ); //DONE
 void  ClearBit( int A[],  int k ); //DONE
@@ -122,4 +124,6 @@ int write_inode_list(int* inode_list); //DONE
 int set_inode_list(int k);//DONE
 int clear_inode_list(int k);//DONE
 
+int add_file_direntry(int current_dir,char* filename,int inode_num);//DONE
+int get_inode_num_from_direntry(char* filename);
 #endif

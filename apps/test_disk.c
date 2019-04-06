@@ -15,8 +15,8 @@ int test_disk(){
 	assert(sb->next_free_block == get_next_free_block());
 	//test write inode
 	assert(sb->next_free_inode == get_next_free_inode());
-	printf("Tests: sb NFInode: %d\n", sb->next_free_inode);
-	printf("Tests: getNFInode: %d\n", get_next_free_inode());
+	// printf("Tests: sb NFInode: %d\n", sb->next_free_inode);
+	// printf("Tests: getNFInode: %d\n", get_next_free_inode());
 	// printf("Testing inode write to inode 3. Size: %zu\n", sizeof(inode));
 	// inode *iptr = (inode *)malloc(sizeof(inode));
 	// if (iptr == NULL){
@@ -51,8 +51,8 @@ int main(){
 	init_root();
 	create_file("file.txt");
 	create_file("testfile.txt");
-	test_disk();
 	write_new_file("robot.txt","/robot.txt");
+	read_file("robot.txt");
 	test_disk();
 
 	return 0;

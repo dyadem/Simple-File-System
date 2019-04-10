@@ -1,6 +1,5 @@
 //file.h userspace api
 
-
 // common errors
 #define ERR_DISK_FULL -1
 #define ERR_MAX_FILES -2
@@ -19,47 +18,30 @@
 #define LSEEK_ABSOLUTE 1
 #define LSEEK_END 2
 
-int initFS(char *vdisk_path); //DONE
-int init_root();//DONE
-int create_file();//DONE
-int write_new_file(char *file, char *path);//DONE
-int read_file(char *filename);//DONE
+//initializes the virtual disk with superblock,
+//free-block and free inode vector and inode blocks
+int initFS(char *vdisk_path);
 
+// Initializes block 9 with the root directory
+int init_root();
 
-// Closes a file. Removes the index int the "open files" table and ensures
-// that all data is synchronized with the disk.
-void file_close(int file_number);
+// creates a new empty file in the current directory
+int create_file();
 
-// Reads a specified number of bytes from file into buffer.
-// Returns the number of bytes actually read.
-int file_read(int file_number, void *buffer, int bytes);
+// writes a file to disk
+int write_new_file(char *file, char *path);
 
-// Writes a specified number of bytes from buffer into file.
-// Returns the number of bytes actually written.
-int file_write(int file_number, void *buffer, int bytes);
+// prints the contents of a file from disk to the command line
+int read_file(char *filename);
 
-// Repostition a file's read/write position pointer.
-// Takes a command to tell whether to position offset bytes from the current position
-// or absolutely.
-// If the new offset is past the current end of the file, the file is expanded.
-// Returns the new offset or an error.
-int file_lseek(int file_number, int offset, int command);
+// removes a file
+int file_delete(char *path); //TODO
 
-// Deletes the specified file.
-// Returns an error or SUCCESS.
-int file_delete(char *path);
+// makes a new directory
+int file_mkdir(char *path); //TODO
 
-// Creates the specified directory.
-// Returns an error or SUCCESS.
-int file_mkdir(char *path);
+// removes the directory
+int file_rmdir(char *path); //TODO
 
-// Removes the specified directory.
-// Returns an error or SUCCESS.
-int file_rmdir(char *path);
-
-// Lists the given directory.
-// Returns a null pointer terminated array of character strings.
-char **file_listdir(char *path);
-
-// Prints a directory listing to the screen.
-void file_printdir(char *path);
+// lists the contents of the directory
+char **file_listdir(char *path); //TODO

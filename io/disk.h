@@ -95,35 +95,40 @@ typedef struct block {
 	char data[BLOCK_SIZE];
 } block;
 /************* function definitions *****************/
-int open_fs(char *fs_path); //DONE
-void close_fs(void); //DONE
+//Opens the virtualdisk to write and read
+int open_fs(char *fs_path);
+void close_fs(void);
 
-void  SetBit( int A[],  int k ); //DONE
-void  ClearBit( int A[],  int k ); //DONE
-int TestBit( int A[],  int k ); //DONE
+// Helper functions to manipulate the free block and free inode vectors
+void  SetBit( int A[],  int k );
+void  ClearBit( int A[],  int k );
+int TestBit( int A[],  int k );
 
-inode *get_inode(int inode_number); //DONE
-int write_inode(inode *node); //DONE
-int path_to_inode(char* path); //DONE
+//Functions to get and write file metadata to inodes
+inode *get_inode(int inode_number);
+int write_inode(inode *node);
+int path_to_inode(char* path);
 
-void* block_read(int offset); //DONE
-int block_write(void* block, int offset, int data_size); //DONE
+//Functions to read and write blocks to disk
+void* block_read(int offset);
+int block_write(void* block, int offset, int data_size);
 
-superblock* get_superblock(); //DONE
-int write_superblock(superblock* sb); //DONE
 
-int* get_block_list(); //DONE
-int get_next_free_block(); //DONE
-int write_block_list(int* block_list); //DONE
-int set_block_list(int k);//DONE
-int clear_block_list(int k);//DONE
+superblock* get_superblock();
+int write_superblock(superblock* sb);
 
-int* get_inode_list(); //DONE
-int get_next_free_inode(); //DONE
-int write_inode_list(int* inode_list); //DONE
-int set_inode_list(int k);//DONE
-int clear_inode_list(int k);//DONE
+int* get_block_list();
+int get_next_free_block();
+int write_block_list(int* block_list);
+int set_block_list(int k);
+int clear_block_list(int k);
 
-int add_file_direntry(int current_dir,char* filename,int inode_num);//DONE
+int* get_inode_list();
+int get_next_free_inode();
+int write_inode_list(int* inode_list);
+int set_inode_list(int k);
+int clear_inode_list(int k);
+
+int add_file_direntry(int current_dir,char* filename,int inode_num);
 int get_inode_num_from_direntry(char* filename);
 #endif

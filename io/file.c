@@ -1,10 +1,9 @@
-// functions for creating, deleting, and reading directories
+// file.c functions for creating, deleting, and reading directories
 
 #include "file.h"
 #include "disk.h"
 #include <string.h>
 #include <assert.h>
-
 
 //disk initialization
 int initFS(char *vdisk_path){
